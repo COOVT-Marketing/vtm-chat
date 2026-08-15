@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin console — VTM Chat</title>
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
+  <script src="/js/theme-boot.js"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="admin-page">
+    <a class="back-link" href="/">&larr; Back to chat</a>
+    <div class="admin-title-row">
+      <img src="/images/logo.svg" alt="" width="30" height="30" />
+      <h1>Admin console</h1>
+    </div>
+    <p class="admin-note">Every read here is written to the audit log — access is disclosed and traceable, not hidden.</p>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="users">Users</button>
+      <button class="admin-tab" data-tab="channels">All Channels</button>
+      <button class="admin-tab" data-tab="search">Search</button>
+      <button class="admin-tab" data-tab="audit">Audit Log</button>
+    </div>
+
+    <div id="tab-content"></div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    init();
+
+    async function init() {
+      try {
+        const me = await api.me();
+        if (me.role !== 'SUPERADMIN') {
+          document.querySelector('.admin-page').innerHTML = '<p>You do not have access to this page.</p>';
+          return;
+        }
+      } catch {
+        window.location.href = '/login';
+        return;
+      }
+      document.querySelectorAll('.admin-tab').forEach((btn) => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+      renderUsers();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.admin-tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+      if (tab === 'users') renderUsers();
+      if (tab === 'channels') renderChannels();
+      if (tab === 'search') renderSearch();
+      if (tab === 'audit') renderAudit();
+    }
+
+    async function renderUsers() {
+      const users = await api.admin.getUsers();
+      document.getElementById('tab-content').innerHTML = `
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead>
+          <tbody>
+            ${users.map(u => `<tr><td>${esc(u.displayName)}</td><td>${esc(u.email)}</td><td>${u.role === 'SUPERADMIN' ? '<span class="badge-admin">Admin</span>' : 'Member'}</td><td>${u.isActive ? 'Active' : 'Deactivated'}</td></tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    async function renderChannels() {
+      const channels = await api.admin.getAllChannels();
+      document.getElementById('tab-content').innerHTML = `
+        <table>
+          <thead><tr><th>Channel</th><th>Type</th><th>Members</th><th>Messages</th><th>Created by</th></tr></thead>
+          <tbody>
+            ${channels.map(c => `<tr><td>${esc(c.name)}</td><td>${c.type}${c.is_private ? ' (private)' : ''}</td><td>${c.memberCount}</td><td>${c.messageCount}</td><td>${esc(c.creatorName)}</td></tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    function renderSearch() {
+      document.getElementById('tab-content').innerHTML = `
+        <div class="search-row">
+          <input type="text" id="search-input" placeholder="Search all messages…" />
+          <button class="btn-primary" style="width:auto; padding:9px 18px;" id="search-btn">Search</button>
+        </div>
+        <div id="search-results"></div>`;
+
+      document.getElementById('search-btn').addEventListener('click', async () => {
+        const q = document.getElementById('search-input').value.trim();
+        if (q.length < 2) return;
+        const results = await api.admin.search(q);
+        document.getElementById('search-results').innerHTML = results.map(m => `
+          <div class="search-result">
+            <div class="meta">${esc(m.authorName)} in #${esc(m.channelName)}</div>
+            <div>${esc(m.body)}</div>
+          </div>`).join('') || '<p style="color:var(--text-secondary);">No results.</p>';
+      });
+    }
+
+    async function renderAudit() {
+      const log = await api.admin.getAuditLog();
+      document.getElementById('tab-content').innerHTML = `
+        <table>
+          <thead><tr><th>When</th><th>Admin</th><th>Action</th><th>Target</th></tr></thead>
+          <tbody>
+            ${log.map(e => `<tr><td>${new Date(e.created_at).toLocaleString()}</td><td>${esc(e.actorName)}</td><td>${esc(e.action)}</td><td>${esc(e.target_type)}:${esc(e.target_id)}</td></tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    function esc(str) {
+      const div = document.createElement('div');
+      div.textContent = str ?? '';
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
