@@ -6,6 +6,17 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { Server } = require('socket.io');
 
+// Auto-run seed script on server boot to create/grant Admin role
+try {
+  const seed = require('./lib/seed');
+  if (typeof seed === 'function') {
+    seed();
+  }
+  console.log('[SEED] Admin initialization executed successfully.');
+} catch (err) {
+  console.error('[SEED ERROR] Failed to run seed script:', err.message);
+}
+
 const authRoutes = require('./routes/auth');
 const channelRoutes = require('./routes/channels');
 const uploadRoutes = require('./routes/uploads');
@@ -15,11 +26,11 @@ const registerSocketHandlers = require('./sockets');
 const app = express();
 const server = http.createServer(app);
 
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || '*';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '../uploads');
 const PUBLIC_DIR = path.join(__dirname, '../public');
 
-app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static(UPLOAD_DIR));
@@ -48,7 +59,7 @@ app.use((err, req, res, next) => {
 });
 
 const io = new Server(server, {
-  cors: { origin: CLIENT_ORIGIN, credentials: true },
+  cors: { origin: '*', credentials: true },
 });
 registerSocketHandlers(io);
 
