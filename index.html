@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VTM Chat</title>
+<meta name="theme-color" content="#548888">
+<link rel="icon" id="favicon" href="images/icon-192.png?v=2">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png?v=2">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=31">
+</head>
+<body>
+
+<section id="auth" hidden>
+  <div class="auth-brand">
+    <img src="images/login.png" alt="Vocal Tech Marketing">
+    <p>VTM Team Chat. Fast, simple & secure.</p>
+  </div>
+  <div class="auth-side">
+    <form id="authForm" class="auth-card" autocomplete="on">
+      <h1 id="authTitle">Welcome back</h1>
+      <p class="sub" id="authSub">Sign in to your account</p>
+      <label>Username<input id="fUser" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+      <label class="signup-only">Display name<input id="fName" placeholder="e.g. John"></label>
+      <label>Password<input id="fPass" type="password" minlength="6" autocomplete="current-password" required></label>
+      <label class="signup-only">Invite code<input id="fInvite" autocomplete="off"></label>
+      <p class="note signup-only">New accounts must be approved by an admin before they can use the chat. Admins can review chat activity for workplace compliance.</p>
+      <p class="err" id="authErr" role="alert"></p>
+      <button class="btn" id="authBtn">Sign in</button>
+      <button type="button" class="link" id="authSwitch">Don't have an account? Sign up</button>
+    </form>
+  </div>
+</section>
+
+<div id="app" hidden>
+  <aside id="side">
+    <header class="side-head">
+      <img src="images/icon-192.png?v=2" alt="" class="brand-ico"><b>VTM Chat</b><span class="grow"></span>
+      <button class="icon-btn" id="readAll" title="Mark all as read" aria-label="Mark all as read"><svg viewBox="0 0 24 24"><path d="M2 12l5 5L18 6M12 17l1 1L22 8"/></svg></button>
+      <button class="icon-btn" id="themeBtn" title="Change Theme" aria-label="Toggle theme"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.5-.1-1-.2-1.4A5.5 5.5 0 0 1 12.4 3.2 9 9 0 0 0 12 3z"/></svg></button>
+      <button class="icon-btn" id="newBtn" title="New chat" aria-label="New chat"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    </header>
+    <div class="search"><input id="q" placeholder="Search chats…" aria-label="Search chats"></div>
+    <div id="conn" hidden role="status">Live connection lost, reconnecting… Messages still sync every few seconds.</div>
+    <div id="notifBanner" hidden><span></span><button class="btn sm">Allow</button></div>
+    <nav id="roomList" aria-label="Chats"></nav>
+    <footer class="me">
+      <div id="meAv" title="Edit profile" role="button"></div>
+      <div class="grow" title="Edit profile" role="button"><b id="meName"></b><small>Online</small></div>
+      <button class="icon-btn" id="admBtn" hidden title="Admin console" aria-label="Admin console"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg></button>
+      <button class="icon-btn" id="logout" title="Sign out" aria-label="Sign out"><svg viewBox="0 0 24 24"><path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/></svg></button>
+    </footer>
+  </aside>
+
+  <main id="main">
+    <div id="empty"><img src="images/icon-192.png?v=2" alt=""><h2>VTM Chat</h2><p>Select a chat from the left side or start a new one.</p></div>
+    <section id="chat" hidden>
+      <header class="chat-head">
+        <button class="icon-btn" id="back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <div id="hAv"></div>
+        <div class="grow"><b id="hName"></b><small id="hSub"></small></div>
+        <button class="icon-btn" id="membersBtn" hidden title="Members" aria-label="Group members"><svg viewBox="0 0 24 24"><path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 20v-2a4 4 0 0 0-3-3.9M16 2.1a4 4 0 0 1 0 7.8"/></svg></button>
+      </header>
+      <div id="msgs"></div>
+      <div id="mention" hidden role="listbox" aria-label="Mention someone"></div>
+      <div id="typing" hidden></div>
+      <div id="replyBar" class="strip" hidden></div>
+      <div id="filePrev" class="strip" hidden></div>
+      <footer class="composer empty">
+        <label class="icon-btn" title="Attach files"><svg viewBox="0 0 24 24"><path d="M21 11l-9 9a6 6 0 0 1-8.5-8.5l9-9a4 4 0 0 1 5.7 5.7l-9 9a2 2 0 0 1-2.8-2.8l8.3-8.3"/></svg><input type="file" id="file" hidden></label>
+        <textarea id="ta" rows="1" placeholder="Type Message…" aria-label="Message"></textarea>
+        <button class="send" id="sendBtn" title="Send" aria-label="Send"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg></button>
+        <button class="send" id="micBtn" title="Record a voice message" aria-label="Record a voice message"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/></svg></button>
+        <div id="recBar" hidden>
+          <button class="icon-btn" id="recCancel" title="Cancel" aria-label="Cancel recording"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+          <span class="rec-dot"></span><b id="recTime">0:00</b><span class="rec-hint">Recording…</span>
+          <button class="send" id="recSend" title="Send voice message" aria-label="Send voice message"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg></button>
+        </div>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<div id="ctx" hidden role="menu"></div>
+<div id="crop" hidden></div>
+<section id="pending" hidden>
+  <div class="pend-card">
+    <img src="images/login.png" alt="Vocal Tech Marketing">
+    <h2>Waiting for approval</h2>
+    <p>Your account has been created. An admin needs to approve it before you can use the chat. This page updates by itself once you are approved.</p>
+    <div class="c-btns"><button class="btn" id="pendCheck">Check again</button><button class="btn ghost" id="pendOut">Sign out</button></div>
+  </div>
+</section>
+<div id="admin" hidden>
+  <header class="adm-head"><button class="icon-btn" data-a="close" aria-label="Close admin console"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><b>Admin console</b><span class="grow"></span><small>Visible to admins only</small></header>
+  <nav id="admTabs"><button data-t="users" class="on">Users</button><button data-t="feed">Live activity</button><button data-t="convos">Conversations</button></nav>
+  <div id="admBody"></div>
+</div>
+<div id="modal" hidden></div>
+<div id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/config.js?v=31"></script>
+<script src="js/app.js?v=31"></script>
+<script>
+/* Agar kuch files purani reh gayi hon (GitHub par sab upload na hui hon) to saaf warning dikhao */
+(function () {
+  var cssOk = getComputedStyle(document.documentElement).getPropertyValue('--build').trim() === '31', jsOk = window.VTM_BUILD === '3.1';
+  if (cssOk && jsOk) return;
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99;background:#c62d1f;color:#fff;padding:10px 14px;font:600 14px/1.4 system-ui,sans-serif;text-align:center';
+  d.textContent = 'Some app files are out of date (' + [jsOk ? '' : 'js/app.js', cssOk ? '' : 'css/style.css'].filter(Boolean).join(', ') + '). Upload ALL files from the latest zip to GitHub, wait a minute, then press Ctrl+Shift+R.';
+  document.body.prepend(d);
+})();
+</script>
+</body>
+</html>
